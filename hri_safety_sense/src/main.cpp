@@ -12,27 +12,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 #include "VscProcess.h"
 
-hri_safety_sense::VscProcess *VSCInterface;
+std::shared_ptr<hri_safety_sense::VscProcess> VSCInterface;
 
 /**
  * VSC Vehicle Interface
  */
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "VscProcess");
+    rclcpp::init(argc, argv);
 
-	// Create vehicle interface
-	VSCInterface = new hri_safety_sense::VscProcess();
+    // Create vehicle interface
+    VSCInterface = std::make_shared<hri_safety_sense::VscProcess>();
 
-	// Allow ROS to handle timing and callbacks
-	ros::spin();
+    // Initialize joystickHandler
+    VSCInterface->init();
 
-	// Application ending
-	delete VSCInterface;
+    // Allow ROS to handle timing and callbacks
+    rclcpp::spin(VSCInterface);
 
-	return 0;
+    // Application ending
+    VSCInterface.reset();
+
+    rclcpp::shutdown();
+
+    return 0;
 }
-
-

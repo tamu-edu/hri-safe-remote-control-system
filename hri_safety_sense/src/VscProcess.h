@@ -18,10 +18,11 @@
 /**
  * ROS Includes
  */
-#include "ros/ros.h"
-#include "hri_safety_sense/EmergencyStop.h"
-#include "hri_safety_sense/KeyValue.h"
-#include "hri_safety_sense/KeyString.h"
+#include "rclcpp/rclcpp.hpp"
+#include "hri_safety_sense/srv/emergency_stop.hpp"
+#include "hri_safety_sense/srv/key_value.hpp"
+#include "hri_safety_sense/srv/key_string.hpp"
+#include "std_msgs/msg/u_int32.hpp"
 
 /**
  * HRI_COMMON Includes
@@ -32,54 +33,59 @@
 
 namespace hri_safety_sense {
 
-	// Diagnostics
-	struct ErrorCounterType {
-		uint32_t sendErrorCount;
-		uint32_t invalidRxMsgCount;
-	};
+    // Diagnostics
+    struct ErrorCounterType {
+        uint32_t sendErrorCount;
+        uint32_t invalidRxMsgCount;
+    };
 
-	/**
-	 * Local Definitions
-	 */
-	const unsigned int VSC_INTERFACE_RATE = 50; /* 50 Hz */
-	const unsigned int VSC_HEARTBEAT_RATE = 20; /* 20 Hz */
+    /**
+     * Local Definitions
+     */
+    const unsigned int VSC_INTERFACE_RATE = 50; /* 50 Hz */
+    const unsigned int VSC_HEARTBEAT_RATE = 20; /* 20 Hz */
 
-	class VscProcess {
-	   public:
-		  VscProcess();
-		  ~VscProcess();
+    class VscProcess : public rclcpp::Node {
+    public:
+        VscProcess();
+        ~VscProcess();
 
-		  // Main loop
-		  void processOneLoop(const ros::TimerEvent&);
+        void init();
 
-		  // ROS Callback's
-		  bool EmergencyStop(EmergencyStop::Request &req, EmergencyStop::Response &res);
-		  bool KeyValue(KeyValue::Request &req, KeyValue::Response &res);
-		  bool KeyString(KeyString::Request &req, KeyString::Response &res);
+        // Main loop
+        void processOneLoop();
 
-	   private:
+        // ROS Callback's
+        void EmergencyStop(const std::shared_ptr<hri_safety_sense::srv::EmergencyStop::Request> request,
+                            std::shared_ptr<hri_safety_sense::srv::EmergencyStop::Response> response);
+        void KeyValue(const std::shared_ptr<hri_safety_sense::srv::KeyValue::Request> request,
+                        std::shared_ptr<hri_safety_sense::srv::KeyValue::Response> response);
+        void KeyString(const std::shared_ptr<hri_safety_sense::srv::KeyString::Request> request,
+                        std::shared_ptr<hri_safety_sense::srv::KeyString::Response> response);
 
-		  void readFromVehicle();
-		  int handleHeartbeatMsg(VscMsgType& recvMsg);
+    private:
 
-		  // Local State
-		  uint32_t 				myEStopState;
-		  ErrorCounterType 		errorCounts;
+        void readFromVehicle();
+        int handleHeartbeatMsg(VscMsgType& recvMsg);
 
-		  // ROS
-		  ros::NodeHandle 		rosNode;
-		  ros::Timer 	  		mainLoopTimer;
-		  ros::ServiceServer    estopServ, keyValueServ, keyStringServ;
-		  ros::Publisher		estopPub;
-		  ros::Time 			lastDataRx, lastTxTime;
+        // Local State
+        uint32_t 				myEStopState;
+        ErrorCounterType 		errorCounts;
 
-		  // Message Handlers
-		  MsgHandler			*joystickHandler;
+        // ROS
+        rclcpp::TimerBase::SharedPtr  mainLoopTimer;
+        rclcpp::Service<hri_safety_sense::srv::EmergencyStop>::SharedPtr    estopServ;
+        rclcpp::Service<hri_safety_sense::srv::KeyValue>::SharedPtr         keyValueServ;
+        rclcpp::Service<hri_safety_sense::srv::KeyString>::SharedPtr        keyStringServ;
+        rclcpp::Publisher<std_msgs::msg::UInt32>::SharedPtr    estopPub;
+        rclcpp::Time 			lastDataRx, lastTxTime;
 
-		  /* File descriptor for VSC Interface */
-		  VscInterfaceType		*vscInterface;
+        // Message Handlers
+        MsgHandler              *joystickHandler;
 
-	};
+		/* File descriptor for VSC Interface */
+		VscInterfaceType		*vscInterface;
+    };
 
 } // namespace
 

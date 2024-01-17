@@ -15,18 +15,18 @@
 /**
  * ROS Includes
  */
-#include "ros/ros.h"
-#include "sensor_msgs/Joy.h"
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/joy.hpp"
 
 #include "VehicleMessages.h"
 #include "JoystickHandler.h"
 
 using namespace hri_safety_sense;
 
-JoystickHandler::JoystickHandler()
+JoystickHandler::JoystickHandler(rclcpp::Node::SharedPtr node) : rosNode(node)
 {
 	// Joystick Pub
-	rawLeftPub = rosNode.advertise<sensor_msgs::Joy>("/joy", 10);
+	rawLeftPub = rosNode->create_publisher<sensor_msgs::msg::Joy>("/joy", 10);
 }
 
 JoystickHandler::~JoystickHandler()
@@ -46,6 +46,7 @@ int32_t JoystickHandler::getStickValue(JoystickType joystick)
 	}
 
 	// Error case
+	RCLCPP_ERROR(rosNode->get_logger(), "Invalid joystick status");
 	return 0;
 }
 
@@ -61,46 +62,46 @@ int32_t JoystickHandler::getButtonValue(uint8_t button)
 
 uint32_t JoystickHandler::handleNewMsg(const VscMsgType &incomingMsg)
 {
-	int retval = 0;
+    int retval = 0;
 
-	if(incomingMsg.msg.length == sizeof(JoystickMsgType)) {
+    if(incomingMsg.msg.length == sizeof(JoystickMsgType)) {
 
-		JoystickMsgType *joyMsg = (JoystickMsgType*)incomingMsg.msg.data;
+        JoystickMsgType *joyMsg = (JoystickMsgType*)incomingMsg.msg.data;
 
-		// Broadcast Left Joystick
-		sensor_msgs::Joy sendLeftMsg;
+        // Broadcast Left Joystick
+        sensor_msgs::msg::Joy sendLeftMsg;
 
-		sendLeftMsg.header.stamp = ros::Time::now();
-		sendLeftMsg.header.frame_id = "/srcs";
+        sendLeftMsg.header.stamp = rosNode->now();
+        sendLeftMsg.header.frame_id = "/srcs";
 
-		sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->leftX));
-		sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->leftY));
-		sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->leftZ));
+        sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->leftX));
+        sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->leftY));
+        sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->leftZ));
 
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.home));
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.first));
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.second));
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.third));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.home));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.first));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.second));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->leftSwitch.third));
 
-		sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->rightX));
-		sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->rightY));
-		sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->rightZ));
+        sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->rightX));
+        sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->rightY));
+        sendLeftMsg.axes.push_back((float)getStickValue(joyMsg->rightZ));
 
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.home));
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.first));
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.second));
-		sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.third));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.home));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.first));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.second));
+        sendLeftMsg.buttons.push_back(getButtonValue(joyMsg->rightSwitch.third));
 
-		rawLeftPub.publish(sendLeftMsg);
+        rawLeftPub->publish(sendLeftMsg);
 
-	} else {
-		retval = -1;
+    } else {
+        retval = -1;
 
-		ROS_WARN("RECEIVED PTZ COMMANDS WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
-				(unsigned int)sizeof(JoystickMsgType), incomingMsg.msg.length);
-	}
+        RCLCPP_WARN(rosNode->get_logger(), "RECEIVED PTZ COMMANDS WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+                (unsigned int)sizeof(JoystickMsgType), incomingMsg.msg.length);
+    }
 
-	return retval;
+    return retval;
 }
 
 

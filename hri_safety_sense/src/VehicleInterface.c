@@ -88,6 +88,7 @@ VscInterfaceType* vsc_initialize(const char *device, const unsigned int baud) {
 void vsc_cleanup(VscInterfaceType* vscInterface) {
 	if (vscInterface) {
 		if (vscInterface->fd != -1) {
+			printf("Closing serial port.\n");
 			close_serial_interface(vscInterface->fd);
 		}
 

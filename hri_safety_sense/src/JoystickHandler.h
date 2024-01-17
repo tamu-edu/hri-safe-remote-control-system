@@ -18,32 +18,27 @@
 /**
  * Includes
  */
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include "VehicleMessages.h"
 #include "MsgHandler.h"
 
 namespace hri_safety_sense {
 
-	/**
-	 *
-	 */
-	class JoystickHandler : public MsgHandler {
-	   public:
-		  JoystickHandler();
-		  ~JoystickHandler();
+class JoystickHandler : public MsgHandler {
+public:
+  JoystickHandler(rclcpp::Node::SharedPtr node);
+  ~JoystickHandler();
 
-		  uint32_t handleNewMsg(const VscMsgType &incomingMsg);
+  uint32_t handleNewMsg(const VscMsgType &incomingMsg) override;
 
-	   private:
+private:
+  int32_t getStickValue(JoystickType joystick);
+  int32_t getButtonValue(uint8_t button);
+  rclcpp::Node::SharedPtr rosNode;
+  rclcpp::Publisher<sensor_msgs::msg::Joy>::SharedPtr rawLeftPub, rawRightPub;
+};
 
-		  int32_t getStickValue(JoystickType joystick);
-		  int32_t getButtonValue(uint8_t button);
-
-		  ros::NodeHandle 		rosNode;
-		  ros::Publisher 		rawLeftPub, rawRightPub;
-	};
-
-}
+} 
 
 #endif

@@ -18,7 +18,7 @@
 /**
  * Includes
  */
-#include "ros/ros.h"
+#include "rclcpp/rclcpp.hpp"
 #include "VehicleMessages.h"
 
 namespace hri_safety_sense {
