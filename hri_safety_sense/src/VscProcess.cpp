@@ -158,7 +158,7 @@ int VscProcess::handleHeartbeatMsg(VscMsgType& recvMsg)
         estopPub->publish(estopValue);
 
         if(msgPtr->EStopStatus > 0) {
-            RCLCPP_WARN(this->get_logger(), "Received ESTOP from the vehicle!!! 0x%x",msgPtr->EStopStatus);
+            RCLCPP_DEBUG(this->get_logger(), "Received ESTOP from the vehicle!!! 0x%x",msgPtr->EStopStatus);
         }
 
     } else {
