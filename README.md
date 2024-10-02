@@ -1,3 +1,8 @@
+This is a ROS2 port of the hri-safe-remote-control-system code that Humanistic Robotics provides.
+
+Their noe was for ROS1 so we made some changes to get this working with ROS2.
+
+
 
 <h1><a href="http://humanisticrobotics.com" target="_blank">Humanistic Robotics</a></h1>
 
