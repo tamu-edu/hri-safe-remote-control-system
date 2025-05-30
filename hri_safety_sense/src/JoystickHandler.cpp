@@ -26,7 +26,7 @@ using namespace hri_safety_sense;
 JoystickHandler::JoystickHandler(rclcpp::Node::SharedPtr node) : rosNode(node)
 {
 	// Joystick Pub
-	rawLeftPub = rosNode->create_publisher<sensor_msgs::msg::Joy>("/joy", 10);
+	rawLeftPub = rosNode->create_publisher<sensor_msgs::msg::Joy>("/fort/joy", 10);
 }
 
 JoystickHandler::~JoystickHandler()
